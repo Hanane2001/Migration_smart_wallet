@@ -4,6 +4,19 @@ namespace App\Models;
 use App\Core\Model;
 
 class User extends Model {
+    private int $id;
+    private string $fullName;
+    private string $email;
+    private string $password;
+    // private PDO $pdo;
+
+    public function __construct(string $fullName, string $email, string $password){
+        $this->setFullName($fullName);
+        $this->setEmail($email);
+        $this->password = password_hash($password, PASSWORD_DEFAULT);
+        // $this->pdo = Database::getInstance()->getConnection();
+    }
+
     public function register(string $fullName, string $email, string $password, string $confirmPassword): bool {
         $errors = [];
 
@@ -74,4 +87,11 @@ class User extends Model {
     public static function isLoggedIn(): bool {
         return isset($_SESSION['user_id']);
     }
+
+    // public function getId(): int{ return $id; }
+    // public function getFullName(): string{ return $fullName; }
+    // public function getEmail(): string{ return $email; }
+    // public function setId(int $id){ $this->id = $id; }
+    // public function setFullName(string $fullName){ $this->fullName = $fullName; }
+    // public function setEmail(string $email){ $this->email = $email; }
 }

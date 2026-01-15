@@ -1,79 +1,54 @@
 <?php
-class User{
-    private int $id;
-    private string $fullName;
-    private string $email;
-    private string $password;
-    private PDO $pdo;
+namespace App\Controllers;
+use App\Core\Controller;
+use App\Models\User;
 
-    public function __construct(string $fullName, string $email, string $password){
-        $this->setFullName($fullName);
-        $this->setEmail($email);
-        $this->password = password_hash($password, PASSWORD_DEFAULT);
-        $db = Database::getInstance();
-        $this->pdo = $db->getConnection();
+class AuthController extends Controller{
+    private $userModel;
+    public function __construct(){
+        $this->userModel = new User();
     }
 
-    public function getId(): int{
-        return $id;
-    }
-    public function getFullName(): string{
-        return $fullName;
-    }
-    public function getEmail(): string{
-        return $email;
-    }
-    public function setId(int $id){
-        $this->id = $id;
-    }
-    public function setFullName(string $fullName){
-        $this->fullName = $fullName;
-    }
-    public function setEmail(string $email){
-        $this->email = $email;
-    }
-
-    public function login($email, $password){}
-
-    public function signup(User $user, $confirmPass): bool{
-        $errors = [];
-        if(empty($user->fullName)){
-            $errors[] = "Full name is required";
+    public function login(){
+        if($this->isLoggedIn()){
+            $this->redirect('dashboard');
+            $data = [];
+            if($_SERVER['REQUEST_METHOD'] === 'POST'){
+                $email = $_POST['email'] ?? '';
+                $password = $_POST['password'] ?? '';
+                if($this->userModel->login($email, $password)){
+                    $this->redirect('dashboard');
+                }else{
+                    $data['error'] = "Invalid email or password"; 
+                }
+            }
+            $this->view('auth/login', $data);
         }
-        if(!filter_var($user->email, FILTER_VALIDATE_EMAIL)){
-            $errors[] = "Invalid email format";
-        }
-        if(strlen($user->password) < 6){
-            $errors[] = "Password must be at least 6 characters";
-        }
-        if($user->password !== $confirmPass){
-            $errors[] = "Passwords do not match";
-        }
+    }
 
-        if(empty($errors)){
-            $stmt = $this->pdo->prepare("SELECT idUser FROM users WHERE email = ?");
-            $stmt->execute([$user->email]);
-            if($stmt->rowCount() > 0){
-                $errors[] = "Email already exists";
+    public function register() {
+        if($this->isLoggedIn()){
+            $this->redirect('dashboard');
+        }
+        $data = [];
+        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+            $fullName = $_POST['fullName'] ?? '';
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $confirmPassword = $_POST['confirmPassword'] ?? '';
+            if($this->userModel->register($fullName, $email, $password, $confirmPassword)){
+                $this->redirect('auth/login?message=registered');
+            }else{
+                $data['error'] = $_SESSION['errors'] ?? []; 
+                unset($_SESSION['errors']);
             }
         }
+        $this->view('auth/register', $data);
+    }
 
-        if(!empty($errors)){
-            $_SESSION['errors'] = $errors;
-            return false;
-        }
-        $stmt = $this->pdo->prepare("INSERT INTO users (fullName, email, password) VALUES (?, ?, ?)");
-        $res = $stmt->execute([$user->fullName, $user->emai, $$user->password]);
-        if($res){
-            $this->id = $this->pdo->lastInsertId();
-            $this->fullName = $user->fullName;
-            $this->email = $user->email;
-            $_SESSION['user_id'] = $this->id;
-            $_SESSION['user_name'] = $user->fullName;
-            $_SESSION['user_email'] = $user->email;
-            return true;
-        }
-        return false;
+    public function logout(){
+        $this->userModel->logout();
+        $this->redirect('auth/login?message=logout');
     }
 }
 ?>
