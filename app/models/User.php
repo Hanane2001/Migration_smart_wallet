@@ -4,7 +4,7 @@ namespace App\Models;
 use App\Core\Model;
 
 class User extends Model {
-    public function register($fullName, $email, $password, $confirmPassword) {
+    public function register(string $fullName, string $email, string $password, string $confirmPassword): bool {
         $errors = [];
 
         if (empty($fullName)) $errors[] = "Full name is required";
@@ -14,7 +14,8 @@ class User extends Model {
         
         if (empty($errors)) {
             $sql = "SELECT id_user FROM users WHERE email = ?";
-            $stmt = $this->executeQuery($sql, [$email]);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$email]);
             if ($stmt->rowCount() > 0) {
                 $errors[] = "Email already exists";
             }
@@ -27,7 +28,8 @@ class User extends Model {
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $sql = "INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)";
-        $stmt = $this->executeQuery($sql, [$fullName, $email, $hashedPassword]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$fullName, $email, $hashedPassword]);
         
         if ($stmt) {
             $_SESSION['user_id'] = $this->db->lastInsertId();
@@ -40,14 +42,15 @@ class User extends Model {
         return false;
     }
 
-    public function login($email, $password) {
+    public function login(string $email, string $password): bool {
         if (empty($email) || empty($password)) {
             $_SESSION['errors'] = ["Email and password are required"];
             return false;
         }
         
         $sql = "SELECT * FROM users WHERE email = ?";
-        $stmt = $this->executeQuery($sql, [$email]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$email]);
         $user = $stmt->fetch();
         
         if ($user && password_verify($password, $user['password'])) {
@@ -68,7 +71,7 @@ class User extends Model {
         return true;
     }
 
-    public static function isLoggedIn() {
+    public static function isLoggedIn(): bool {
         return isset($_SESSION['user_id']);
     }
 }

@@ -4,13 +4,14 @@ namespace App\Models;
 use App\Core\Model;
 
 class Category extends Model {
-    public function create($name, $type, $userId = null) {
+    public function create(string $name, string $type, ?int $userId = null): bool {
         $sql = "INSERT INTO categories (name_cat, type_cat, user_id) VALUES (?, ?, ?)";
-        $stmt = $this->executeQuery($sql, [$name, $type, $userId]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$name, $type, $userId]);
         return $stmt !== false;
     }
 
-    public function getAll($type = null, $userId = null) {
+    public function getAll(?string $type = null, ?int $userId = null): array {
         $sql = "SELECT * FROM categories WHERE user_id IS NULL";
         $params = [];
         
@@ -25,17 +26,19 @@ class Category extends Model {
         }
         
         $sql .= " ORDER BY name_cat";
-        $stmt = $this->executeQuery($sql, $params);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
-    public function getById($id) {
+    public function getById(int $id): array {
         $sql = "SELECT * FROM categories WHERE id_cat = ?";
-        $stmt = $this->executeQuery($sql, [$id]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id]);
         return $stmt->fetch();
     }
 
-    public function getByType($type, $userId = null) {
+    public function getByType(?string $type, ?int $userId = null): array {
         $sql = "SELECT * FROM categories WHERE type_cat = ? AND (user_id IS NULL";
         $params = [$type];
         
@@ -45,18 +48,19 @@ class Category extends Model {
         }
         
         $sql .= ") ORDER BY name_cat";
-        
-        $stmt = $this->executeQuery($sql, $params);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
-    public function update($id, $name, $type) {
+    public function update(int $id, string $name, string $type): bool {
         $sql = "UPDATE categories SET name_cat = ?, type_cat = ? WHERE id_cat = ?";
-        $stmt = $this->executeQuery($sql, [$name, $type, $id]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$name, $type, $id]);
         return $stmt !== false;
     }
 
-    public function delete($id, $userId = null) {
+    public function delete(int $id, ?int $userId = null): bool {
         $sql = "DELETE FROM categories WHERE id_cat = ?";
         $params = [$id];
         
@@ -64,8 +68,8 @@ class Category extends Model {
             $sql .= " AND (user_id = ? OR user_id IS NULL)";
             $params[] = $userId;
         }
-        
-        $stmt = $this->executeQuery($sql, $params);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt !== false;
     }
 }

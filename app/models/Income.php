@@ -4,17 +4,18 @@ namespace App\Models;
 use App\Core\Model;
 
 class Income extends Model {
-    public function create($amount, $date, $description, $userId, $categoryId = null) {
+    public function create(float $amount, DateTime $date, string $description, int $userId, ?int $categoryId = null) {
         if (empty($amount) || empty($date) || empty($userId)) {
             return false;
         }
         
         $sql = "INSERT INTO incomes (amount_in, date_in, description_in, user_id, category_id) VALUES (?, ?, ?, ?, ?)";
-        $stmt = $this->executeQuery($sql, [$amount, $date, $description, $userId, $categoryId]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$amount, $date, $description, $userId, $categoryId]);
         return $stmt !== false;
     }
 
-    public function getAll($userId, $limit = null) {
+    public function getAll(int $userId, ?int $limit = null): array {
         $sql = "SELECT i.*, c.name_cat as category_name 
                 FROM incomes i 
                 LEFT JOIN categories c ON i.category_id = c.id_cat 
@@ -24,12 +25,12 @@ class Income extends Model {
         if ($limit) {
             $sql .= " LIMIT " . intval($limit);
         }
-        
-        $stmt = $this->executeQuery($sql, [$userId]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }
 
-    public function getById($id, $userId = null) {
+    public function getById(int $id, ?int $userId = null): array {
         $sql = "SELECT i.*, c.name_cat as category_name 
                 FROM incomes i 
                 LEFT JOIN categories c ON i.category_id = c.id_cat 
@@ -41,12 +42,12 @@ class Income extends Model {
             $sql .= " AND i.user_id = ?";
             $params[] = $userId;
         }
-        
-        $stmt = $this->executeQuery($sql, $params);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetch();
     }
 
-    public function update($id, $amount, $date, $description, $categoryId, $userId = null) {
+    public function update(int $id, float $amount, DateTime $date, string $description, int $categoryId, ?int $userId = null) {
         $sql = "UPDATE incomes SET amount_in = ?, date_in = ?, description_in = ?, category_id = ? WHERE id_in = ?";
         $params = [$amount, $date, $description, $categoryId, $id];
         
@@ -54,12 +55,12 @@ class Income extends Model {
             $sql .= " AND user_id = ?";
             $params[] = $userId;
         }
-        
-        $stmt = $this->executeQuery($sql, $params);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt !== false;
     }
 
-    public function delete($id, $userId = null) {
+    public function delete(int $id, ?int $userId = null) {
         $sql = "DELETE FROM incomes WHERE id_in = ?";
         $params = [$id];
         
@@ -67,12 +68,12 @@ class Income extends Model {
             $sql .= " AND user_id = ?";
             $params[] = $userId;
         }
-        
-        $stmt = $this->executeQuery($sql, $params);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt !== false;
     }
 
-    public function getTotal($userId, $month = null, $year = null) {
+    public function getTotal(int $userId, ?int $month = null, ?int $year = null) {
         $sql = "SELECT SUM(amount_in) as total FROM incomes WHERE user_id = ?";
         $params = [$userId];
         
@@ -87,21 +88,21 @@ class Income extends Model {
             $sql .= " AND EXTRACT(YEAR FROM date_in) = ?";
             $params[] = $year;
         }
-        
-        $stmt = $this->executeQuery($sql, $params);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         $result = $stmt->fetch();
         return $result['total'] ?? 0;
     }
 
-    public function getMonthlyTotal($userId, $year = null) {
+    public function getMonthlyTotal(int $userId, ?int $year = null): array {
         $year = $year ?? date('Y');
         $sql = "SELECT EXTRACT(MONTH FROM date_in) as month, SUM(amount_in) as total 
                 FROM incomes 
                 WHERE user_id = ? AND EXTRACT(YEAR FROM date_in) = ? 
                 GROUP BY EXTRACT(MONTH FROM date_in) 
                 ORDER BY month";
-        
-        $stmt = $this->executeQuery($sql, [$userId, $year]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId, $year]);
         return $stmt->fetchAll();
     }
 }
