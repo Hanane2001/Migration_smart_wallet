@@ -8,6 +8,7 @@ class IncomeController extends Controller{
     private $incomeModel;
     private $categoryModel;
     public function __construct(){
+        $this->checkAuth();
         $this->incomeModel = new Income();
         $this->categoryModel = new Category();
     }

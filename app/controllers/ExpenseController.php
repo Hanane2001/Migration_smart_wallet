@@ -8,6 +8,7 @@ class ExpenseController extends Controller{
     private $expenseModel;
     private $categoryModel;
     public function __construct(){
+        $this->checkAuth();
         $this->expenseModel = new Expense();
         $this->categoryModel = new Category();
     }
