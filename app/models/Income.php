@@ -106,3 +106,4 @@ class Income extends Model {
         return $stmt->fetchAll();
     }
 }
+?>

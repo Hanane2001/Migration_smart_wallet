@@ -126,3 +126,4 @@ class Expense extends Model {
         return $stmt->fetchAll();
     }
 }
+?>

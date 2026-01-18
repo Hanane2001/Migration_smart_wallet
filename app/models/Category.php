@@ -73,3 +73,4 @@ class Category extends Model {
         return $stmt !== false;
     }
 }
+?>
