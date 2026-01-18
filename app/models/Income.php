@@ -4,15 +4,14 @@ namespace App\Models;
 use App\Core\Model;
 
 class Income extends Model {
-    public function create(float $amount, DateTime $date, string $description, int $userId, ?int $categoryId = null) {
+    public function create(float $amount, string $date, string $description, int $userId, ?int $categoryId = null): bool {
         if (empty($amount) || empty($date) || empty($userId)) {
             return false;
         }
         
         $sql = "INSERT INTO incomes (amount_in, date_in, description_in, user_id, category_id) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$amount, $date, $description, $userId, $categoryId]);
-        return $stmt !== false;
+        return $stmt->execute([$amount, $date, $description, $userId, $categoryId]);
     }
 
     public function getAll(int $userId, ?int $limit = null): array {
@@ -27,7 +26,7 @@ class Income extends Model {
         }
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$userId]);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll() ?: [];
     }
 
     public function getById(int $id, ?int $userId = null): array {
@@ -44,10 +43,10 @@ class Income extends Model {
         }
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetch();
+        return $stmt->fetch() ?: [];
     }
 
-    public function update(int $id, float $amount, DateTime $date, string $description, int $categoryId, ?int $userId = null) {
+    public function update(int $id, float $amount, string $date, string $description, ?int $categoryId = null, ?int $userId = null): bool {
         $sql = "UPDATE incomes SET amount_in = ?, date_in = ?, description_in = ?, category_id = ? WHERE id_in = ?";
         $params = [$amount, $date, $description, $categoryId, $id];
         
@@ -56,11 +55,10 @@ class Income extends Model {
             $params[] = $userId;
         }
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt !== false;
+        return $stmt->execute($params);
     }
 
-    public function delete(int $id, ?int $userId = null) {
+    public function delete(int $id, ?int $userId = null): bool {
         $sql = "DELETE FROM incomes WHERE id_in = ?";
         $params = [$id];
         
@@ -69,11 +67,10 @@ class Income extends Model {
             $params[] = $userId;
         }
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt !== false;
+        return $stmt->execute($params);
     }
 
-    public function getTotal(int $userId, ?int $month = null, ?int $year = null) {
+    public function getTotal(int $userId, ?int $month = null, ?int $year = null): float {
         $sql = "SELECT SUM(amount_in) as total FROM incomes WHERE user_id = ?";
         $params = [$userId];
         
@@ -103,7 +100,7 @@ class Income extends Model {
                 ORDER BY month";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$userId, $year]);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll() ?: [];
     }
 }
 ?>

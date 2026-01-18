@@ -1,8 +1,6 @@
 <?php
 namespace App\Core;
 
-use App\Config\config;
-
 class Model {
     protected $db;
 

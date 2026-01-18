@@ -2,6 +2,12 @@
 namespace App\Core;
 
 class Controller {
+    public function __construct() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
     protected function view($view, $data = []) {
         extract($data);
         require_once '../app/views/' . $view . '.php';
@@ -19,6 +25,7 @@ class Controller {
     protected function checkAuth() {
         if (!$this->isLoggedIn()) {
             $this->redirect('auth/login');
+            exit();
         }
         return $_SESSION['user_id'];
     }

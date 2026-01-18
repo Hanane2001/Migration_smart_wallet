@@ -29,13 +29,12 @@ class User extends Model {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $sql = "INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$fullName, $email, $hashedPassword]);
+        $result = $stmt->execute([$fullName, $email, $hashedPassword]);
         
-        if ($stmt) {
+        if ($result) {
             $_SESSION['user_id'] = $this->db->lastInsertId();
             $_SESSION['user_name'] = $fullName;
             $_SESSION['user_email'] = $email;
-            
             return true;
         }
         
@@ -57,7 +56,6 @@ class User extends Model {
             $_SESSION['user_id'] = $user['id_user'];
             $_SESSION['user_name'] = $user['full_name'];
             $_SESSION['user_email'] = $user['email'];
-            
             return true;
         } else {
             $_SESSION['errors'] = ["Invalid email or password"];
@@ -65,7 +63,7 @@ class User extends Model {
         }
     }
 
-    public function logout() {
+    public function logout(): bool {
         session_unset();
         session_destroy();
         return true;

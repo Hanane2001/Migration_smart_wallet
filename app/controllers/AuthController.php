@@ -10,43 +10,48 @@ class AuthController extends Controller{
     }
 
     public function login(){
-        if($this->isLoggedIn()){
+        if ($this->isLoggedIn()){
             $this->redirect('dashboard');
-            $data = [];
-            if($_SERVER['REQUEST_METHOD'] === 'POST'){
-                $email = $_POST['email'] ?? '';
-                $password = $_POST['password'] ?? '';
-                if($this->userModel->login($email, $password)){
-                    $this->redirect('dashboard');
-                }else{
-                    $data['error'] = "Invalid email or password"; 
-                }
-            }
-            $this->view('auth/login', $data);
+            return;
         }
+        $data = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            if ($this->userModel->login($email, $password)) {
+                $this->redirect('dashboard');
+                return;
+            } else {
+                $data['error'] = $_SESSION['errors'][0] ?? "Invalid email or password";
+                unset($_SESSION['errors']);
+            }
+        }
+        $this->view('auth/login', $data);
     }
 
     public function register() {
-        if($this->isLoggedIn()){
+        if ($this->isLoggedIn()){
             $this->redirect('dashboard');
+            return;
         }
         $data = [];
-        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fullName = $_POST['fullName'] ?? '';
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $confirmPassword = $_POST['confirmPassword'] ?? '';
-            if($this->userModel->register($fullName, $email, $password, $confirmPassword)){
+            if ($this->userModel->register($fullName, $email, $password, $confirmPassword)) {
                 $this->redirect('auth/login?message=registered');
-            }else{
-                $data['error'] = $_SESSION['errors'] ?? []; 
+                return;
+            } else {
+                $data['error'] = $_SESSION['errors'] ?? [];
                 unset($_SESSION['errors']);
             }
         }
         $this->view('auth/register', $data);
     }
 
-    public function logout(){
+    public function logout() {
         $this->userModel->logout();
         $this->redirect('auth/login?message=logout');
     }

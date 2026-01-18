@@ -2,8 +2,8 @@
 namespace App\Core;
 
 class App {
-    protected $controller = 'Dashboard';
-    protected $method = 'index';
+    protected $controller = 'Auth';
+    protected $method = 'login';
     protected $params = [];
 
     public function __construct() {
@@ -12,8 +12,11 @@ class App {
             $this->controller = ucfirst($url[0]);
             unset($url[0]);
         }
-
         $controllerClass = "App\\Controllers\\" . $this->controller . 'Controller';
+        if (!class_exists($controllerClass)) {
+            $controllerClass = "App\\Controllers\\AuthController";
+        }
+        
         $this->controller = new $controllerClass();
         if (isset($url[1])) {
             if (method_exists($this->controller, $url[1])) {
